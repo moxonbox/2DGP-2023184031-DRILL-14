@@ -132,6 +132,18 @@ class BirdTests(unittest.TestCase):
         self.assertGreater(ay, 0.0)
         self.assertEqual(bird.flocking([bird]), (0.0, 0.0))
 
+    def test_edges_reverse_target_without_instantly_reversing_velocity(self):
+        flock = boy.Flock()
+        leader = max(flock.birds, key=lambda bird: bird.x)
+        leader.x = flock.width - boy.TURN_MARGIN
+        flock.step(1.0 / 120.0)
+        self.assertEqual(flock.direction, -1)
+        self.assertGreater(leader.vx, 0.0)
+        self.assertLess(leader.vx, boy.CRUISE_SPEED)
+        flock.birds[0].x = boy.TURN_MARGIN
+        flock.step(1.0 / 120.0)
+        self.assertEqual(flock.direction, 1)
+
 
 if __name__ == '__main__':
     unittest.main()

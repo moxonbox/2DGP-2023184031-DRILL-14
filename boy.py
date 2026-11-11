@@ -185,6 +185,7 @@ MAX_THRUST = 1.0
 MAX_STEERING = 12.0
 SEPARATION_RADIUS = 2.4
 NEIGHBOR_RADIUS = 6.0
+TURN_MARGIN = 6.0
 PRESSURE_AREA = 0.5 * AIR_DENSITY * WING_AREA
 CRUISE_DRAG = PRESSURE_AREA * DRAG_COEFFICIENT * CRUISE_SPEED ** 2
 FLOCK_SIZE = 10
@@ -304,6 +305,10 @@ class Flock:
         ) for i in range(FLOCK_SIZE)]
 
     def step(self, dt):
+        if self.direction > 0 and max(bird.x for bird in self.birds) >= self.width - TURN_MARGIN:
+            self.direction = -1
+        elif self.direction < 0 and min(bird.x for bird in self.birds) <= TURN_MARGIN:
+            self.direction = 1
         # Read every bird before moving any bird to avoid update-order bias.
         steering = [bird.steering(self.direction, self.altitude, self.birds)
                     for bird in self.birds]
