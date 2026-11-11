@@ -186,6 +186,10 @@ MAX_STEERING = 12.0
 SEPARATION_RADIUS = 2.4
 NEIGHBOR_RADIUS = 6.0
 TURN_MARGIN = 6.0
+PHYSICS_DT = 1.0 / 120.0
+MAX_FRAME_TIME = 0.25
+SCREEN_MARGIN = 1.5
+MIN_ALTITUDE = 4.0
 PRESSURE_AREA = 0.5 * AIR_DENSITY * WING_AREA
 CRUISE_DRAG = PRESSURE_AREA * DRAG_COEFFICIENT * CRUISE_SPEED ** 2
 FLOCK_SIZE = 10
@@ -299,6 +303,7 @@ class Flock:
         self.height = get_canvas_height() / PIXELS_PER_METER
         self.altitude = self.height * 0.62
         self.direction = 1
+        self.accumulator = 0.0
         self.birds = [Bird(
             self.width * 0.35 + (i % 5 - 2) * 2.4,
             self.altitude + (i // 5 - 0.5) * 2.0, i,
@@ -314,6 +319,21 @@ class Flock:
                     for bird in self.birds]
         for bird, force in zip(self.birds, steering):
             bird.step(dt, force)
+            if bird.x < SCREEN_MARGIN:
+                bird.x, bird.vx = SCREEN_MARGIN, max(0.0, bird.vx)
+            elif bird.x > self.width - SCREEN_MARGIN:
+                bird.x, bird.vx = self.width - SCREEN_MARGIN, min(0.0, bird.vx)
+            if bird.y < MIN_ALTITUDE:
+                bird.y, bird.vy = MIN_ALTITUDE, max(0.0, bird.vy)
+            elif bird.y > self.height - SCREEN_MARGIN:
+                bird.y, bird.vy = self.height - SCREEN_MARGIN, min(0.0, bird.vy)
+
+    def update(self):
+        # shortcut: stalls above 0.25 s discard excess time; revisit for replay simulation.
+        self.accumulator += max(0.0, min(game_framework.frame_time, MAX_FRAME_TIME))
+        while self.accumulator + 1e-12 >= PHYSICS_DT:
+            self.step(PHYSICS_DT)
+            self.accumulator = max(0.0, self.accumulator - PHYSICS_DT)
 
     def draw(self):
         for bird in self.birds:

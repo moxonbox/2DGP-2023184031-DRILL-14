@@ -144,6 +144,27 @@ class BirdTests(unittest.TestCase):
         flock.step(1.0 / 120.0)
         self.assertEqual(flock.direction, 1)
 
+    def test_fixed_steps_ignore_negative_time_and_bound_long_stalls(self):
+        flock = boy.Flock()
+        with patch.object(flock, 'step') as step:
+            with patch.object(boy.game_framework, 'frame_time', -1.0):
+                flock.update()
+            step.assert_not_called()
+            with patch.object(boy.game_framework, 'frame_time', 5.0):
+                flock.update()
+            self.assertEqual(step.call_count, 30)
+            self.assertLess(flock.accumulator, boy.PHYSICS_DT)
+
+    def test_flight_bounds_stop_outward_motion(self):
+        flock = boy.Flock()
+        bird = flock.birds[0]
+        bird.x, bird.y = -10.0, -10.0
+        bird.vx, bird.vy = -20.0, -20.0
+        flock.step(boy.PHYSICS_DT)
+        self.assertEqual((bird.x, bird.y), (boy.SCREEN_MARGIN, boy.MIN_ALTITUDE))
+        self.assertGreaterEqual(bird.vx, 0.0)
+        self.assertGreaterEqual(bird.vy, 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()
