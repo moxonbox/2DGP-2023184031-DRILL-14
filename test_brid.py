@@ -21,6 +21,22 @@ class BirdTests(unittest.TestCase):
         self.loader.assert_called_once_with('bird_animation.png')
         self.assertTrue(all(bird.image is self.image for bird in birds))
 
+    def test_sprite_uses_all_14_cells_and_skips_empty_cell(self):
+        bird = Bird(10.0, 10.0)
+        for frame in range(brid.FRAME_COUNT):
+            bird.frame = frame
+            bird.face_dir = -1
+            bird.draw()
+            args = self.image.clip_composite_draw.call_args.args
+            self.assertEqual(args[:4], (
+                (frame % 5) * 183, 506 - (frame // 5 + 1) * 168, 183, 168))
+            self.assertEqual(args[5], 'h')
+            self.assertGreaterEqual(args[1], 0)
+            self.assertLessEqual(args[0] + args[2], 918)
+        bird.face_dir = 1
+        bird.draw()
+        self.assertEqual(self.image.clip_composite_draw.call_args.args[5], '')
+
 
 if __name__ == '__main__':
     unittest.main()
