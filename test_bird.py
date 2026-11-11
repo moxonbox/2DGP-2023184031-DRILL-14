@@ -41,6 +41,18 @@ class BirdTests(unittest.TestCase):
         bird.draw()
         self.assertEqual(self.image.clip_composite_draw.call_args.args[5], '')
 
+    def test_sprite_pitch_follows_climb_for_both_directions(self):
+        bird = Bird(10.0, 10.0)
+        bird.vy = 2.0
+        bird.draw()
+        self.assertGreater(self.image.clip_composite_draw.call_args.args[4], 0.0)
+        bird.vx, bird.face_dir = -boy.CRUISE_SPEED, -1
+        bird.draw()
+        self.assertLess(self.image.clip_composite_draw.call_args.args[4], 0.0)
+        bird.vx, bird.vy = 0.0, 100.0
+        bird.draw()
+        self.assertLessEqual(abs(self.image.clip_composite_draw.call_args.args[4]), 0.35)
+
     def test_animation_depends_on_elapsed_time_with_individual_phases(self):
         bird, other = Bird(10.0, 10.0), Bird(10.0, 10.0, 1)
         self.assertNotEqual(bird.frame, other.frame)

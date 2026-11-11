@@ -1,4 +1,4 @@
-from math import pi, hypot, sin, tau
+from math import pi, atan2, hypot, sin, tau
 
 from pico2d import *
 from sdl2 import (SDL_KEYDOWN, SDL_KEYUP, SDLK_LEFT, SDLK_RIGHT,
@@ -208,7 +208,6 @@ class Bird:
         self.vx, self.vy = CRUISE_SPEED, 0.0
         self.index = index
         self.face_dir = 1
-        self.frame = 0.0
         self.phase = index / FLOCK_SIZE
         self.flap_hz = 4.0 + (index % 3) * 0.12
         self.frame = self.phase * FRAME_COUNT
@@ -287,10 +286,11 @@ class Bird:
     def draw(self):
         column = int(self.frame) % FRAME_COLUMNS
         row = int(self.frame) // FRAME_COLUMNS
+        pitch = max(-0.35, min(0.35, atan2(self.vy, max(abs(self.vx), 0.1))))
         Bird.image.clip_composite_draw(
             column * FRAME_WIDTH,
             Bird.image.h - (row + 1) * FRAME_HEIGHT,
-            FRAME_WIDTH, FRAME_HEIGHT, 0.0,
+            FRAME_WIDTH, FRAME_HEIGHT, self.face_dir * pitch,
             'h' if self.face_dir < 0 else '',
             self.x * PIXELS_PER_METER, self.y * PIXELS_PER_METER,
             DRAW_WIDTH, DRAW_HEIGHT,
