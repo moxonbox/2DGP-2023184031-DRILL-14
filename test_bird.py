@@ -177,6 +177,49 @@ class BirdTests(unittest.TestCase):
         self.assertGreaterEqual(bird.vx, 0.0)
         self.assertGreaterEqual(bird.vy, 0.0)
 
+    def test_two_minute_flight_keeps_flock_visible_and_repeatedly_turns(self):
+        flock = boy.Flock()
+        turns, direction = 0, flock.direction
+        for _ in range(120 * 120):
+            flock.step(boy.PHYSICS_DT)
+            if flock.direction != direction:
+                turns += 1
+                direction = flock.direction
+            for bird in flock.birds:
+                # Normal flight must stay clear of the emergency boundary clamps.
+                self.assertGreater(bird.x, boy.SCREEN_MARGIN)
+                self.assertLess(bird.x, flock.width - boy.SCREEN_MARGIN)
+                self.assertGreater(bird.y, boy.MIN_ALTITUDE)
+                self.assertLess(bird.y, flock.height - boy.SCREEN_MARGIN)
+                self.assertLess(boy.hypot(bird.vx, bird.vy), 8.0)
+                self.assertTrue(0.0 <= bird.frame < boy.FRAME_COUNT)
+        self.assertGreaterEqual(turns, 10)
+        self.assertEqual(len(flock.birds), 10)
+
+    def test_render_frame_rate_does_not_change_flight(self):
+        flights = []
+        for fps in (30, 60, 144):
+            flock = boy.Flock()
+            with patch.object(boy.game_framework, 'frame_time', 1.0 / fps):
+                for _ in range(fps * 20):
+                    flock.update()
+            flights.append(flock)
+        for flock in flights[1:]:
+            self.assertEqual(flock.direction, flights[0].direction)
+            for expected, actual in zip(flights[0].birds, flock.birds):
+                for name in ('x', 'y', 'vx', 'vy', 'phase'):
+                    self.assertAlmostEqual(getattr(actual, name), getattr(expected, name), places=9)
+
+    def test_flock_does_not_depend_on_bird_update_order(self):
+        forward, reverse = boy.Flock(), boy.Flock()
+        reverse.birds.reverse()
+        for _ in range(120):
+            forward.step(boy.PHYSICS_DT)
+            reverse.step(boy.PHYSICS_DT)
+        for expected, actual in zip(forward.birds, reversed(reverse.birds)):
+            for name in ('x', 'y', 'vx', 'vy'):
+                self.assertAlmostEqual(getattr(actual, name), getattr(expected, name), places=10)
+
 
 if __name__ == '__main__':
     unittest.main()
