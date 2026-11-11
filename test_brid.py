@@ -86,6 +86,16 @@ class BirdTests(unittest.TestCase):
         self.assertGreater(up, 0.0)
         self.assertLess(down, 0.0)
 
+    def test_steering_brakes_before_turning_and_restores_altitude(self):
+        bird = Bird(10.0, 10.0)
+        steering = bird.steering(-1, 11.0)
+        self.assertLess(steering[0], 0.0)
+        self.assertGreater(steering[1], 0.0)
+        bird.step(1.0 / 120.0, steering)
+        self.assertGreater(bird.vx, 0.0)
+        self.assertLess(bird.vx, brid.CRUISE_SPEED)
+        self.assertLessEqual(brid.hypot(*bird.steering(-1, 1000.0)), brid.MAX_STEERING)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -15,6 +15,7 @@ DRAG_COEFFICIENT = 0.14
 WING_AIRSPEED = 5.0
 MAX_LIFT_COEFFICIENT = 2.4
 MAX_THRUST = 1.0
+MAX_STEERING = 12.0
 PRESSURE_AREA = 0.5 * AIR_DENSITY * WING_AREA
 CRUISE_DRAG = PRESSURE_AREA * DRAG_COEFFICIENT * CRUISE_SPEED ** 2
 FLOCK_SIZE = 10
@@ -58,6 +59,14 @@ class Bird:
                 * lift_coefficient * (1.0 + 0.12 * downstroke))
         return ((thrust + drag_x) / MASS,
                 (lift + drag_y) / MASS - GRAVITY)
+
+    def steering(self, direction, altitude):
+        ax = 2.0 * (direction * CRUISE_SPEED - self.vx)
+        ay = 2.4 * (altitude - self.y) - 2.0 * self.vy
+        length = hypot(ax, ay)
+        if length > MAX_STEERING:
+            ax, ay = ax * MAX_STEERING / length, ay * MAX_STEERING / length
+        return ax, ay
 
     def step(self, dt, steering=(0.0, 0.0)):
         ax, ay = self.acceleration(steering)
