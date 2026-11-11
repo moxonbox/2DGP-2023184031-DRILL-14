@@ -3,20 +3,20 @@
 import unittest
 from unittest.mock import Mock, patch
 
-import brid
-from brid import Bird
+import boy
+from boy import Bird
 
 
 class BirdTests(unittest.TestCase):
     def setUp(self):
         Bird.image = None
         self.image = Mock(h=506)
-        loader = patch.object(brid, 'load_image', return_value=self.image)
+        loader = patch.object(boy, 'load_image', return_value=self.image)
         self.loader = loader.start()
         self.addCleanup(loader.stop)
         self.addCleanup(setattr, Bird, 'image', None)
         for name, value in (('get_canvas_width', 1600), ('get_canvas_height', 600)):
-            canvas = patch.object(brid, name, return_value=value)
+            canvas = patch.object(boy, name, return_value=value)
             canvas.start()
             self.addCleanup(canvas.stop)
 
@@ -27,7 +27,7 @@ class BirdTests(unittest.TestCase):
 
     def test_sprite_uses_all_14_cells_and_skips_empty_cell(self):
         bird = Bird(10.0, 10.0)
-        for frame in range(brid.FRAME_COUNT):
+        for frame in range(boy.FRAME_COUNT):
             bird.frame = frame
             bird.face_dir = -1
             bird.draw()
@@ -54,10 +54,10 @@ class BirdTests(unittest.TestCase):
 
     def test_velocity_integrates_acceleration_in_seconds(self):
         bird = Bird(10.0, 10.0)
-        with patch.object(bird, 'acceleration', return_value=(0.0, -brid.GRAVITY)):
+        with patch.object(bird, 'acceleration', return_value=(0.0, -boy.GRAVITY)):
             bird.step(0.1)
         self.assertAlmostEqual(bird.x, 10.6)
-        self.assertAlmostEqual(bird.vy, -brid.GRAVITY * 0.1)
+        self.assertAlmostEqual(bird.vy, -boy.GRAVITY * 0.1)
         self.assertLess(bird.y, 10.0)
         bird.vx = -2.0
         bird.step(0.0)
@@ -68,12 +68,12 @@ class BirdTests(unittest.TestCase):
         ax, ay = bird.acceleration((0.0, 0.0))
         self.assertAlmostEqual(ax, 0.0)
         self.assertAlmostEqual(ay, 0.0)
-        with patch.object(brid, 'MAX_LIFT_COEFFICIENT', 0.0):
-            self.assertAlmostEqual(bird.acceleration((0.0, 0.0))[1], -brid.GRAVITY)
+        with patch.object(boy, 'MAX_LIFT_COEFFICIENT', 0.0):
+            self.assertAlmostEqual(bird.acceleration((0.0, 0.0))[1], -boy.GRAVITY)
 
     def test_drag_opposes_motion_and_grows_with_speed_squared(self):
         bird = Bird(10.0, 10.0)
-        with patch.object(brid, 'MAX_THRUST', 0.0):
+        with patch.object(boy, 'MAX_THRUST', 0.0):
             slow = bird.acceleration((0.0, 0.0))[0]
             bird.vx *= 2
             fast = bird.acceleration((0.0, 0.0))[0]
@@ -97,11 +97,11 @@ class BirdTests(unittest.TestCase):
         self.assertGreater(steering[1], 0.0)
         bird.step(1.0 / 120.0, steering)
         self.assertGreater(bird.vx, 0.0)
-        self.assertLess(bird.vx, brid.CRUISE_SPEED)
-        self.assertLessEqual(brid.hypot(*bird.steering(-1, 1000.0)), brid.MAX_STEERING)
+        self.assertLess(bird.vx, boy.CRUISE_SPEED)
+        self.assertLessEqual(boy.hypot(*bird.steering(-1, 1000.0)), boy.MAX_STEERING)
 
     def test_flock_spawns_and_draws_exactly_ten_birds(self):
-        flock = brid.Flock()
+        flock = boy.Flock()
         self.assertEqual(len(flock.birds), 10)
         self.assertEqual(len({(bird.x, bird.y) for bird in flock.birds}), 10)
         flock.step(1.0 / 120.0)
@@ -115,6 +115,15 @@ class BirdTests(unittest.TestCase):
         right.x = left.x
         self.assertLess(left.flocking([left, right])[0], 0.0)
         self.assertGreater(right.flocking([left, right])[0], 0.0)
+
+    def test_bird_aligns_velocity_only_with_local_neighbors(self):
+        bird, neighbor = Bird(10.0, 10.0), Bird(13.0, 10.0, 1)
+        neighbor.vx, neighbor.vy = 8.0, 2.0
+        ax, ay = bird.flocking([bird, neighbor])
+        self.assertGreater(ax, 0.0)
+        self.assertGreater(ay, 0.0)
+        neighbor.x = 30.0
+        self.assertEqual(bird.flocking([bird, neighbor]), (0.0, 0.0))
 
 
 if __name__ == '__main__':

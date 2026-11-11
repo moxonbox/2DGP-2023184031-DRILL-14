@@ -6,8 +6,8 @@
 - `game_framework.py`: 모드 수명주기와 초 단위 `frame_time`을 관리한다.
 - `play_mode.py`: 입력을 처리하고 장면을 구성한다.
 - `game_world.py`: 레이어별 개체를 갱신하고 그린다.
-- `boy.py`, `ball.py`, `grass.py`: 기존 캐릭터, 공, 배경이다.
-- `brid.py`: 새 개체와 새떼의 애니메이션·물리를 담당한다.
+- `boy.py`: 기존 `Boy`와 새 비행을 담당하는 `Bird`, `Flock` 클래스다.
+- `ball.py`, `grass.py`: 기존 공과 배경이다.
 
 ## 구현 기준
 
