@@ -108,6 +108,14 @@ class BirdTests(unittest.TestCase):
         flock.draw()
         self.assertEqual(self.image.clip_composite_draw.call_count, 10)
 
+    def test_nearby_and_coincident_birds_separate(self):
+        left, right = Bird(10.0, 10.0, 0), Bird(11.0, 10.0, 1)
+        self.assertLess(left.flocking([left, right])[0], 0.0)
+        self.assertGreater(right.flocking([left, right])[0], 0.0)
+        right.x = left.x
+        self.assertLess(left.flocking([left, right])[0], 0.0)
+        self.assertGreater(right.flocking([left, right])[0], 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()

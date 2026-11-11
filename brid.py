@@ -16,6 +16,7 @@ WING_AIRSPEED = 5.0
 MAX_LIFT_COEFFICIENT = 2.4
 MAX_THRUST = 1.0
 MAX_STEERING = 12.0
+SEPARATION_RADIUS = 2.4
 PRESSURE_AREA = 0.5 * AIR_DENSITY * WING_AREA
 CRUISE_DRAG = PRESSURE_AREA * DRAG_COEFFICIENT * CRUISE_SPEED ** 2
 FLOCK_SIZE = 10
@@ -60,9 +61,28 @@ class Bird:
         return ((thrust + drag_x) / MASS,
                 (lift + drag_y) / MASS - GRAVITY)
 
-    def steering(self, direction, altitude):
+    def flocking(self, neighbors):
+        ax, ay = 0.0, 0.0
+        for other in neighbors:
+            if other is self:
+                continue
+            dx, dy = self.x - other.x, self.y - other.y
+            distance = hypot(dx, dy)
+            if distance < SEPARATION_RADIUS:
+                if distance < 1e-8:
+                    # Give coincident birds opposite escape directions.
+                    dx, dy = (1.0 if self.index > other.index else -1.0), 0.0
+                    distance = 1.0
+                strength = 8.0 * (SEPARATION_RADIUS - distance) / SEPARATION_RADIUS
+                ax += dx / distance * strength
+                ay += dy / distance * strength
+        return ax, ay
+
+    def steering(self, direction, altitude, neighbors=()):
         ax = 2.0 * (direction * CRUISE_SPEED - self.vx)
         ay = 2.4 * (altitude - self.y) - 2.0 * self.vy
+        flock_x, flock_y = self.flocking(neighbors)
+        ax, ay = ax + flock_x, ay + flock_y
         length = hypot(ax, ay)
         if length > MAX_STEERING:
             ax, ay = ax * MAX_STEERING / length, ay * MAX_STEERING / length
@@ -104,7 +124,8 @@ class Flock:
 
     def step(self, dt):
         # Read every bird before moving any bird to avoid update-order bias.
-        steering = [bird.steering(self.direction, self.altitude) for bird in self.birds]
+        steering = [bird.steering(self.direction, self.altitude, self.birds)
+                    for bird in self.birds]
         for bird, force in zip(self.birds, steering):
             bird.step(dt, force)
 
