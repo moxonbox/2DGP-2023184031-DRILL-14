@@ -232,6 +232,7 @@ class Bird:
     def flocking(self, neighbors):
         ax, ay = 0.0, 0.0
         count, velocity_x, velocity_y = 0, 0.0, 0.0
+        center_x, center_y = 0.0, 0.0
         for other in neighbors:
             if other is self:
                 continue
@@ -241,6 +242,8 @@ class Bird:
                 count += 1
                 velocity_x += other.vx
                 velocity_y += other.vy
+                center_x += other.x
+                center_y += other.y
             if distance < SEPARATION_RADIUS:
                 if distance < 1e-8:
                     # Give coincident birds opposite escape directions.
@@ -252,6 +255,8 @@ class Bird:
         if count:
             ax += 0.8 * (velocity_x / count - self.vx)
             ay += 0.8 * (velocity_y / count - self.vy)
+            ax += 0.35 * (center_x / count - self.x)
+            ay += 0.35 * (center_y / count - self.y)
         return ax, ay
 
     def steering(self, direction, altitude, neighbors=()):

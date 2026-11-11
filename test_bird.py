@@ -125,6 +125,13 @@ class BirdTests(unittest.TestCase):
         neighbor.x = 30.0
         self.assertEqual(bird.flocking([bird, neighbor]), (0.0, 0.0))
 
+    def test_equal_velocity_birds_cohere_towards_local_center(self):
+        bird, neighbor = Bird(10.0, 10.0), Bird(14.0, 11.0, 1)
+        ax, ay = bird.flocking([bird, neighbor])
+        self.assertGreater(ax, 0.0)
+        self.assertGreater(ay, 0.0)
+        self.assertEqual(bird.flocking([bird]), (0.0, 0.0))
+
 
 if __name__ == '__main__':
     unittest.main()
