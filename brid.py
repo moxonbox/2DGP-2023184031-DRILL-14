@@ -5,6 +5,7 @@ from pico2d import load_image
 
 PIXELS_PER_METER = 10.0 / 0.3
 CRUISE_SPEED = 6.0
+GRAVITY = 9.81
 FLOCK_SIZE = 10
 FRAME_WIDTH, FRAME_HEIGHT = 183, 168
 FRAME_COLUMNS, FRAME_COUNT = 5, 14
@@ -29,6 +30,16 @@ class Bird:
     def animate(self, dt):
         self.phase = (self.phase + self.flap_hz * dt) % 1.0
         self.frame = self.phase * FRAME_COUNT
+
+    def step(self, dt, acceleration=(0.0, -GRAVITY)):
+        ax, ay = acceleration
+        self.vx += ax * dt
+        self.vy += ay * dt
+        self.x += self.vx * dt
+        self.y += self.vy * dt
+        if abs(self.vx) > 0.1:
+            self.face_dir = 1 if self.vx > 0.0 else -1
+        self.animate(dt)
 
     def draw(self):
         column = int(self.frame) % FRAME_COLUMNS

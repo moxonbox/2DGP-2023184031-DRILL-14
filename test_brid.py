@@ -48,6 +48,16 @@ class BirdTests(unittest.TestCase):
         bird.animate(0.0)
         self.assertEqual(bird.frame, before)
 
+    def test_velocity_integrates_acceleration_in_seconds(self):
+        bird = Bird(10.0, 10.0)
+        bird.step(0.1)
+        self.assertAlmostEqual(bird.x, 10.6)
+        self.assertAlmostEqual(bird.vy, -brid.GRAVITY * 0.1)
+        self.assertLess(bird.y, 10.0)
+        bird.vx = -2.0
+        bird.step(0.0)
+        self.assertEqual(bird.face_dir, -1)
+
 
 if __name__ == '__main__':
     unittest.main()
