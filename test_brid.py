@@ -15,6 +15,10 @@ class BirdTests(unittest.TestCase):
         self.loader = loader.start()
         self.addCleanup(loader.stop)
         self.addCleanup(setattr, Bird, 'image', None)
+        for name, value in (('get_canvas_width', 1600), ('get_canvas_height', 600)):
+            canvas = patch.object(brid, name, return_value=value)
+            canvas.start()
+            self.addCleanup(canvas.stop)
 
     def test_birds_share_one_sprite_texture(self):
         birds = [Bird(10.0, 10.0, i) for i in range(10)]
@@ -95,6 +99,14 @@ class BirdTests(unittest.TestCase):
         self.assertGreater(bird.vx, 0.0)
         self.assertLess(bird.vx, brid.CRUISE_SPEED)
         self.assertLessEqual(brid.hypot(*bird.steering(-1, 1000.0)), brid.MAX_STEERING)
+
+    def test_flock_spawns_and_draws_exactly_ten_birds(self):
+        flock = brid.Flock()
+        self.assertEqual(len(flock.birds), 10)
+        self.assertEqual(len({(bird.x, bird.y) for bird in flock.birds}), 10)
+        flock.step(1.0 / 120.0)
+        flock.draw()
+        self.assertEqual(self.image.clip_composite_draw.call_count, 10)
 
 
 if __name__ == '__main__':

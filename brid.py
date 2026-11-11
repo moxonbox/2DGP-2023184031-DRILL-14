@@ -2,7 +2,7 @@
 
 from math import hypot, sin, tau
 
-from pico2d import load_image
+from pico2d import get_canvas_height, get_canvas_width, load_image
 
 
 PIXELS_PER_METER = 10.0 / 0.3
@@ -89,3 +89,25 @@ class Bird:
             self.x * PIXELS_PER_METER, self.y * PIXELS_PER_METER,
             DRAW_WIDTH, DRAW_HEIGHT,
         )
+
+
+class Flock:
+    def __init__(self):
+        self.width = get_canvas_width() / PIXELS_PER_METER
+        self.height = get_canvas_height() / PIXELS_PER_METER
+        self.altitude = self.height * 0.62
+        self.direction = 1
+        self.birds = [Bird(
+            self.width * 0.35 + (i % 5 - 2) * 2.4,
+            self.altitude + (i // 5 - 0.5) * 2.0, i,
+        ) for i in range(FLOCK_SIZE)]
+
+    def step(self, dt):
+        # Read every bird before moving any bird to avoid update-order bias.
+        steering = [bird.steering(self.direction, self.altitude) for bird in self.birds]
+        for bird, force in zip(self.birds, steering):
+            bird.step(dt, force)
+
+    def draw(self):
+        for bird in self.birds:
+            bird.draw()
