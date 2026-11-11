@@ -22,6 +22,13 @@ class Bird:
         self.index = index
         self.face_dir = 1
         self.frame = 0.0
+        self.phase = index / FLOCK_SIZE
+        self.flap_hz = 4.0 + (index % 3) * 0.12
+        self.frame = self.phase * FRAME_COUNT
+
+    def animate(self, dt):
+        self.phase = (self.phase + self.flap_hz * dt) % 1.0
+        self.frame = self.phase * FRAME_COUNT
 
     def draw(self):
         column = int(self.frame) % FRAME_COLUMNS

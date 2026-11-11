@@ -37,6 +37,17 @@ class BirdTests(unittest.TestCase):
         bird.draw()
         self.assertEqual(self.image.clip_composite_draw.call_args.args[5], '')
 
+    def test_animation_depends_on_elapsed_time_with_individual_phases(self):
+        bird, other = Bird(10.0, 10.0), Bird(10.0, 10.0, 1)
+        self.assertNotEqual(bird.frame, other.frame)
+        bird.animate(0.125)
+        self.assertAlmostEqual(bird.frame, 7.0)
+        bird.animate(0.125)
+        self.assertAlmostEqual(bird.frame, 0.0)
+        before = bird.frame
+        bird.animate(0.0)
+        self.assertEqual(bird.frame, before)
+
 
 if __name__ == '__main__':
     unittest.main()
