@@ -1,6 +1,7 @@
 from pico2d import get_canvas_width, load_image
 
 import game_world
+import game_framework
 
 LAUNCH_SPEED_X = 300.0
 LAUNCH_SPEED_Y = 300.0
@@ -18,12 +19,12 @@ class Ball:
                 'ball21x21.png' if ball_type == 1 else 'ball41x41.png')
         self.image = Ball.images[ball_type]
         self.x, self.y = x, y
-        self.velocity_X = direction * LAUNCH_SPEED_X
+        self.velocity_x = direction * LAUNCH_SPEED_X
         self.velocity_y = LAUNCH_SPEED_Y
         self.radius = 10.5 if ball_type == 1 else 20.5
 
     def update(self):
-        t = game_framework.frame_time
+        dt = game_framework.frame_time
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt - 0.5 * GRAVITY * dt ** 2
         self.velocity_y -= GRAVITY * dt
