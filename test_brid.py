@@ -50,13 +50,41 @@ class BirdTests(unittest.TestCase):
 
     def test_velocity_integrates_acceleration_in_seconds(self):
         bird = Bird(10.0, 10.0)
-        bird.step(0.1)
+        with patch.object(bird, 'acceleration', return_value=(0.0, -brid.GRAVITY)):
+            bird.step(0.1)
         self.assertAlmostEqual(bird.x, 10.6)
         self.assertAlmostEqual(bird.vy, -brid.GRAVITY * 0.1)
         self.assertLess(bird.y, 10.0)
         bird.vx = -2.0
         bird.step(0.0)
         self.assertEqual(bird.face_dir, -1)
+
+    def test_cruise_balances_weight_lift_thrust_and_drag(self):
+        bird = Bird(10.0, 10.0)
+        ax, ay = bird.acceleration((0.0, 0.0))
+        self.assertAlmostEqual(ax, 0.0)
+        self.assertAlmostEqual(ay, 0.0)
+        with patch.object(brid, 'MAX_LIFT_COEFFICIENT', 0.0):
+            self.assertAlmostEqual(bird.acceleration((0.0, 0.0))[1], -brid.GRAVITY)
+
+    def test_drag_opposes_motion_and_grows_with_speed_squared(self):
+        bird = Bird(10.0, 10.0)
+        with patch.object(brid, 'MAX_THRUST', 0.0):
+            slow = bird.acceleration((0.0, 0.0))[0]
+            bird.vx *= 2
+            fast = bird.acceleration((0.0, 0.0))[0]
+            self.assertAlmostEqual(fast, 4 * slow)
+            bird.vx *= -1
+            self.assertGreater(bird.acceleration((0.0, 0.0))[0], 0.0)
+
+    def test_wingbeat_phase_changes_lift(self):
+        bird = Bird(10.0, 10.0)
+        bird.phase = 0.25
+        up = bird.acceleration((0.0, 0.0))[1]
+        bird.phase = 0.75
+        down = bird.acceleration((0.0, 0.0))[1]
+        self.assertGreater(up, 0.0)
+        self.assertLess(down, 0.0)
 
 
 if __name__ == '__main__':
